@@ -6,7 +6,7 @@ Open a terminal/command prompt to the root of the `snapcards-web` folder and run
 each to finish before running the next one:
 
 ```shell
-node install
+npm install
 npm run build
 npm run start
 ```
