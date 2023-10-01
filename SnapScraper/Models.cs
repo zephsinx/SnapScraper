@@ -32,7 +32,7 @@ public class Card
     [JsonPropertyName("source")] public string Source { get; set; } = string.Empty;
     [JsonPropertyName("rarity")] public string Rarity { get; set; } = string.Empty;
     [JsonPropertyName("difficulty")] public string Difficulty { get; set; } = string.Empty;
-    [JsonPropertyName("card_slug")] public string CardSlug => this.Name.ToLowerInvariant().Replace(" ", "");
+    [JsonPropertyName("card_slug")] public string CardSlug => $"{this.Name.ToLowerInvariant().Replace(" ", "")}-{this.VariantId}";
 
     public DbCard ToDbCard()
     {
@@ -46,9 +46,9 @@ public class Card
             Power = this.Power,
             Ability = this.Ability.Replace(oldValue: "<span>", newValue: "").Replace(oldValue: "</span>", newValue: ""),
             Flavor = this.Flavor,
-            ArtUrl = this.Art,
+            ArtUrl = this.Art.Split("?").FirstOrDefault() ?? string.Empty,
             AlternateArt = this.AlternateArt,
-            Url = this.Url,
+            Url = this.Url.Split("?").FirstOrDefault() ?? string.Empty,
             Status = this.Status,
             Source = this.Source,
             Rarity = this.Rarity,
@@ -56,4 +56,22 @@ public class Card
             CardSlug = this.CardSlug,
         };
     }
+}
+
+[Serializable]
+public class CardFileOutput
+{
+    [JsonPropertyName("cardId")] public int CardId { get; set; }
+    [JsonPropertyName("cardName")] public string Name { get; set; } = string.Empty;
+    [JsonPropertyName("cost")] public int Cost { get; set; }
+    [JsonPropertyName("power")] public int Power { get; set; }
+    [JsonPropertyName("ability")] public string Ability { get; set; } = string.Empty;
+    [JsonPropertyName("flavor")] public string Flavor { get; set; } = string.Empty;
+    [JsonPropertyName("artUrl")] public string ArtUrl { get; set; } = string.Empty;
+    [JsonPropertyName("url")] public string Url { get; set; } = string.Empty;
+    [JsonPropertyName("cardStatus")] public string Status { get; set; } = string.Empty;
+    [JsonPropertyName("cardSource")] public string Source { get; set; } = string.Empty;
+    [JsonPropertyName("rarity")] public string Rarity { get; set; } = string.Empty;
+    [JsonPropertyName("difficulty")] public string Difficulty { get; set; } = string.Empty;
+    [JsonPropertyName("cardSlug")] public string CardSlug { get; set; } = string.Empty;
 }

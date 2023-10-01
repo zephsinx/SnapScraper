@@ -15,7 +15,7 @@ public static class CardService
         return true;
     }
 
-    public static bool UpsertCard(SnapScraperDbContext dbContext, DbCard card, out string action)
+    public static bool UpsertCard(SnapScraperDbContext dbContext, DbCard card, out string action, bool saveContext = true)
     {
         DbCard? existingCard = dbContext.Cards.FirstOrDefault(c => c.CardId == card.CardId && c.VariantId == card.VariantId);
 
@@ -42,13 +42,16 @@ public static class CardService
             existingCard.Source = card.Source;
             existingCard.Rarity = card.Rarity;
             existingCard.Difficulty = card.Difficulty;
+            existingCard.CardSlug = card.CardSlug;
         }
         else
         {
             return false;
         }
 
-        dbContext.SaveChanges();
+        if (saveContext)
+            dbContext.SaveChanges();
+
         return true;
     }
 
@@ -77,7 +80,7 @@ public static class CardService
         return dbContext.Cards.AsNoTracking().Where(c => c.Name == name && c.VariantId > 0);
     }
 
-    public static bool UpdateCard(SnapScraperDbContext dbContext, DbCard card)
+    public static bool UpdateCard(SnapScraperDbContext dbContext, DbCard card, bool saveContext = true)
     {
         DbCard? existingCard = dbContext.Cards.FirstOrDefault(c => c.CardId == card.CardId && c.VariantId == card.VariantId);
         if (existingCard is null)
@@ -96,15 +99,18 @@ public static class CardService
         existingCard.Source = card.Source;
         existingCard.Rarity = card.Rarity;
         existingCard.Difficulty = card.Difficulty;
-        existingCard.LocalImagePath = card.LocalImagePath;
+        existingCard.ImageLocalPath = card.ImageLocalPath;
+        existingCard.BlurredImageLocalPath = card.BlurredImageLocalPath;
 
-        dbContext.SaveChanges();
+        if (saveContext)
+            dbContext.SaveChanges();
+
         return true;
     }
 
     public static IEnumerable<DbCard> GetCardsWithMissingImages(SnapScraperDbContext dbContext)
     {
-        return dbContext.Cards.AsNoTracking().Where(c => string.IsNullOrEmpty(c.LocalImagePath));
+        return dbContext.Cards.AsNoTracking().Where(c => string.IsNullOrEmpty(c.ImageLocalPath));
     }
 
     /// <summary>
@@ -112,21 +118,51 @@ public static class CardService
     /// </summary>
     /// <param name="attachmentUrl"></param>
     /// <param name="filePath"></param>
+    /// <param name="ratio"></param>
     /// <returns></returns>
-    public static async Task<(bool, string)> DownloadAndSaveImageAsync(string attachmentUrl, string filePath)
+    public static async Task<(bool, string)> DownloadAndSaveImageAsync(string attachmentUrl, string filePath, double ratio = 0.5)
     {
         try
         {
             await using Stream stream = await new HttpClient().GetStreamAsync(attachmentUrl);
 
-            await using FileStream fileStream = File.Create(filePath);
-            await stream.CopyToAsync(fileStream);
+            Image image = await Image.LoadAsync(stream);
+            int width = (int)(image.Width * ratio);
+            int height = (int)(image.Height * ratio);
+            image.Mutate(i => i.Resize(width: width, height: height));
+            await image.SaveAsync(filePath);
+
             return (true, string.Empty);
         }
         catch (Exception ex)
         {
             return (false, ex.Message);
         }
+    }
+
+    /// <summary>
+    /// Load the image file, blur and save it.
+    /// </summary>
+    /// <param name="filePath"></param>
+    /// <param name="blurredFilePath"></param>
+    /// <returns></returns>
+    public static async Task<(bool success, string error)> GenerateBlurredImageAsync(string filePath, string blurredFilePath)
+    {
+        try
+        {
+            if (File.Exists(blurredFilePath))
+                File.Delete(blurredFilePath);
+
+            Image image = await Image.LoadAsync(filePath);
+            image.Mutate(i => i.GaussianBlur(8f));
+            await image.SaveAsync(blurredFilePath);
+        }
+        catch (Exception ex)
+        {
+            return (false, "");
+        }
+
+        return (true, string.Empty);
     }
 
     /// <summary>

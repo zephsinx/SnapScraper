@@ -18,6 +18,7 @@ public static class CardUtils
                && existingCard.Status == newCard.Status
                && existingCard.Source == newCard.Source
                && existingCard.Rarity == newCard.Rarity
-               && existingCard.Difficulty == newCard.Difficulty;
+               && existingCard.Difficulty == newCard.Difficulty
+               && existingCard.CardSlug == newCard.CardSlug;
     }
 }
