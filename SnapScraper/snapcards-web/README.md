@@ -35,7 +35,8 @@ Aside from triggering the action, it'll set the following variables in Streamer.
 ## Installation
 
 1. Make sure you have Node.js installed and updated.
-2. Open a command prompt to the folder you unzipped (`snapcards-web`) and run the following commands, waiting for each to finish:
+2. Open a command prompt to the folder you unzipped (`snapcards-web`) and run the following commands, waiting for each
+   to finish:
 
    ```shell
    npm install
